@@ -85,9 +85,6 @@ def create_bots(amount):
             birthday = birthday_generator()
             username, cursor = create_account(given_name, surname, birthday, cursor)
 
-            # fill the form with a post request
-            res = req.post(GOOGLE_API)
-
             # save the results in a new json file
             if res.status_code == 200:
                 json.dump(
@@ -105,7 +102,7 @@ def name_selector():
 
     """
 
-    with open("names.json", "r") as json_file:
+    with io.open("names.json", "r", "utf8") as json_file:
         data = json.load(json_file)
         given_name = random.choice(data["given_names"])
         surname = random.choice(data["surnames"])
@@ -127,6 +124,14 @@ def create_account(given_name, surname, birthdate, cursor):
     # create user with typical mail format
     mail = given_name + "_" + surname + birthdate[:4]
     password = generate_password()
+
+    # load the google page
+    soup = bs(req.get(GOOGLE_API).text, "html.parser")
+    soup.find_element_by_id('firstName').send_keys(given_name)
+    soup.find_element_by_id('lasName').send_keys(surname)
+    soup.find_element_by_id('passwd').select('input').send_keys(password)
+    soup.find_element_by_id('confirm-passwd').select('input').send_keys(password)
+
 
     # submit form request
 
